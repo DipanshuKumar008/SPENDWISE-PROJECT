@@ -1,70 +1,124 @@
-# Getting Started with Create React App
+# SpendWise 💸  
+A Smart Expense & Income Tracking Web Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+## 📌 Project Overview
 
-In the project directory, you can run:
+**SpendWise** is a web-based personal finance management application that allows users to track their **income and expenses**, analyze spending behavior, and manage financial data securely.  
+The application is built using **React** for the frontend and **Firebase** for authentication and database services.
 
-### `npm start`
+This project is designed for **educational purposes**, portfolio presentation, and real-world usage learning.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Features
 
-### `npm test`
+### 🔐 User Authentication
+- Secure login & signup using Firebase Authentication
+- Email and password-based authentication
+- Automatic user session handling
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 💰 Expense & Income Management
+- Add income and expense transactions
+- Categorize transactions using tags
+- Store user-specific data securely in Firestore
+- Real-time database updates
 
-### `npm run build`
+### 📊 Analytics Dashboard
+- Line chart showing income and expense trends
+- Pie chart showing category-wise spending
+- Visual insights for better financial decisions
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 📋 Transactions Table
+- View all transactions in tabular format
+- Search transactions by name
+- Filter by transaction type (Income / Expense)
+- Sort data
+- Export transaction history as CSV
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 🎨 User Interface
+- Responsive and clean UI
+- Built using Ant Design
+- Toast notifications for actions and errors
+- Reusable and modular components
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🛠 Technology Stack
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Frontend
+- React.js
+- React Router DOM
+- Ant Design (antd)
+- @ant-design/charts
+- Moment.js
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Backend / Services
+- Firebase Authentication
+- Firebase Firestore
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Utilities
+- PapaParse (CSV export)
+- React Toastify (notifications)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 📁 Project Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+spendwise/
+├── public/
+│   ├── index.html
+│   ├── manifest.json
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── pages/
+│   ├── firebase.js
+│   ├── App.js
+│   ├── index.js
+│   ├── App.css
+├── package.json
+├── package-lock.json
+└── README.md
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## ⚙️ Installation & Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Step 1: Install Dependencies
+npm install
 
-### Analyzing the Bundle Size
+### Step 2: Run Project
+npm start
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 🔑 Firebase Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Create a Firebase project and enable:
+- Authentication (Email/Password)
+- Firestore Database
 
-### Advanced Configuration
+Update firebase.js with your credentials.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 🔮 Future Improvements
+- Monthly reports
+- Budget alerts
+- Dark mode
+- Mobile optimization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 📄 License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Educational use only.
+
+---
+
+## 👤 Author
+
+SpendWise  
+Frontend Project using React & Firebase
