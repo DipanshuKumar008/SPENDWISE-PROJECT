@@ -25,12 +25,12 @@ function SignupSigninComponent() {
 
 
     function signupWithEmail() {
-        //authonticate the user , or basically create a new account using email and pass
+
         if (name !== "" && email !== "" && password !== "" && confirmPassword !== "") {
             if (password === confirmPassword) {
                 setLoading(true);
                 createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
-                    // Signed up 
+
                     const user = userCredential.user;
                     console.log("User => ", user)
                     toast.success("User created!")
@@ -41,15 +41,19 @@ function SignupSigninComponent() {
                     setConfirmPassword("")
                     createDoc(user)
                     navigate("/dashboard")
-                    // Create a doc with user id as the following id
+
 
                 })
                     .catch((error) => {
-                        // const errorCode = error.code;
-                        const errorMessage = error.message;
-                        toast.error(errorMessage)
-                        // ..
+                        if (error.code === "auth/email-already-in-use") {
+                            toast.error("Account already exists. Please sign in.");
+                            setLoginForm(true); // optional: auto switch to login
+                        } else {
+                            toast.error(error.message);
+                        }
+                        setLoading(false);
                     });
+
             } else {
                 toast.error("Password and Confirm Password don't match!")
                 setLoading(false)
@@ -69,20 +73,25 @@ function SignupSigninComponent() {
         if (email !== "" && password !== "") {
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    // Signed in 
+
                     const user = userCredential.user;
                     toast.success("User Logged In!")
                     console.log("User Logged in", user)
                     setLoading(false)
                     navigate("/dashboard")
-                    // ...
                 })
                 .catch((error) => {
-                    // const errorCode = error.code;
-                    const errorMessage = error.message;
-                    toast.error(errorMessage)
-                    setLoading(false)
+                    if (error.code === "auth/user-not-found") {
+                        toast.error("Account does not exist. Please sign up.");
+                        setLoginForm(false);
+                    } else if (error.code === "auth/wrong-password") {
+                        toast.error("Incorrect password.");
+                    } else {
+                        toast.error(error.message);
+                    }
+                    setLoading(false);
                 });
+
         } else {
             toast.error("All Fields are mandatory!")
         }
@@ -104,10 +113,8 @@ function SignupSigninComponent() {
                     createdAt: new Date(),
                 });
                 toast.success("User profile created");
-                setLoading(false)
             } catch (e) {
                 toast.error(e.message);
-                setLoading(false)
             }
         }
     }
@@ -115,131 +122,180 @@ function SignupSigninComponent() {
 
 
 
-    function googleAuth() {
-        setLoading(true)
+
+    async function googleAuth() {
+        setLoading(true);
+
         try {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    // This gives you a Google Access Token. You can use it to access the Google API.
-                    // const credential = GoogleAuthProvider.credentialFromResult(result);
-                    // const token = credential.accessToken;
-                    // The signed-in user info.
-                    const user = result.user;
-                    console.log("User =>", user)
-                    toast.success("User authonticated!")
-                    createDoc(user)
-                    setLoading(false)
-                    navigate("/dashboard")
-                    // IdP data available using getAdditionalUserInfo(result)
-                    // ...
-                }).catch((error) => {
-                    // Handle Errors here.
-                    setLoading(false)
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
 
-                    // const errorCode = error.code;
-                    const errorMessage = error.message;
-                    toast.error(errorMessage)
-                    // The email of the user's account used.
-                    // const email = error.customData.email;
-                });
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
 
-        } catch (e) {
-            setLoading(false)
-            toast.error(e.message)
+            // ❌ user not registered
+            if (!userSnap.exists()) {
+                toast.error("Account does not exist. Please sign up first.");
+                await auth.signOut();        // ✅ correct
+                return;                     // ✅ STOP FLOW
+            }
 
+            // ✅ valid user
+            toast.success("Login successful");
+            navigate("/dashboard");
+
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false);
         }
-
     }
+
+
+
+
+    async function googleSignup() {
+        setLoading(true);
+
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            await createDoc(user); // create Firestore profile
+
+            toast.success("Account created successfully");
+            navigate("/dashboard");
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+
+
 
     return (
         <>
             {loginForm ? (
+                /* ================= LOGIN UI ================= */
                 <div className='signup-wrapper'>
-                    <h2 className='title'>Login on
-                        <span style={{ color: "var(--theme)" }}> SPENDWISE
-                        </span>
+                    <h2 className='title'>
+                        Login on <span style={{ color: "var(--theme)" }}>SPENDWISE</span>
                     </h2>
-                    <form>
 
+                    <form>
                         <Input
-                            type={"email"}
-                            label={"Email"}
+                            type="email"
+                            label="Email"
                             state={email}
                             setstate={setEmail}
-                            placeholder={'DamonSalvatore123@gmail.com'}
+                            placeholder="DamonSalvatore123@gmail.com"
                         />
+
                         <Input
-                            type={"password"}
-                            label={"Password"}
+                            type="password"
+                            label="Password"
                             state={password}
                             setstate={setPassword}
-                            placeholder={'Example@123'}
+                            placeholder="Example@123"
                         />
+
                         <Button
                             disabled={loading}
-                            text={loading ? "Loading..." : "Login Using Email and Password"} onClick={loginUsingEmail} />
+                            text={loading ? "Loading..." : "Login Using Email and Password"}
+                            onClick={loginUsingEmail}
+                        />
+
                         <p className='p-login'>or</p>
+
+                        {/* ✅ LOGIN with Google → googleAuth (CORRECT) */}
                         <Button
                             onClick={googleAuth}
-                            text={loading ? "Loading..." : "Login Using Google"} blue={true} />
-                        <p className='p-login'
+                            text={loading ? "Loading..." : "Login Using Google"}
+                            blue={true}
+                        />
+
+                        <p
+                            className='p-login'
                             style={{ cursor: "pointer" }}
-                            onClick={() => setLoginForm(!loginForm)}
-                        >Don't have an account? <span className='p-login p-blue' >Sign up</span></p>
+                            onClick={() => setLoginForm(false)}
+                        >
+                            Don't have an account?
+                            <span className='p-login p-blue'> Sign up</span>
+                        </p>
                     </form>
                 </div>
-            ) :
-                (
-                    <div className='signup-wrapper'>
-                        <h2 className='title'>Sign Up on
-                            <span style={{ color: "var(--theme)" }}> SPENDWISE
-                            </span>
-                        </h2>
-                        <form>
-                            <Input
-                                type={"text"}
-                                label={"Full Name"}
-                                state={name}
-                                setstate={setName}
-                                placeholder={'Damon Salvatore'}
-                            />
-                            <Input
-                                type={"email"}
-                                label={"Email"}
-                                state={email}
-                                setstate={setEmail}
-                                placeholder={'DamonSalvatore123@gmail.com'}
-                            />
-                            <Input
-                                type={"password"}
-                                label={"Password"}
-                                state={password}
-                                setstate={setPassword}
-                                placeholder={'Example@123'}
-                            />
-                            <Input
-                                type={"password"}
-                                label={"Confirm Password"}
-                                state={confirmPassword}
-                                setstate={setConfirmPassword}
-                                placeholder={'Example@123'}
-                            />
-                            <Button
-                                disabled={loading}
-                                text={loading ? "Loading..." : "Signup Using Email and Password"} onClick={signupWithEmail} />
-                            <p className='p-login'>or</p>
-                            <Button
-                                onClick={googleAuth}
-                                text={loading ? "Loading..." : "Signup Using Google"} blue={true} />
-                            <p className='p-login'
-                                style={{ cursor: "pointer" }}
-                                onClick={() => setLoginForm(!loginForm)}
-                            >Or Have An Account Already? <span className='p-login p-blue'>Click here</span> </p>
-                        </form>
-                    </div>
-                )
-            }
+            ) : (
+                /* ================= SIGNUP UI ================= */
+                <div className='signup-wrapper'>
+                    <h2 className='title'>
+                        Sign Up on <span style={{ color: "var(--theme)" }}>SPENDWISE</span>
+                    </h2>
+
+                    <form>
+                        <Input
+                            type="text"
+                            label="Full Name"
+                            state={name}
+                            setstate={setName}
+                            placeholder="Damon Salvatore"
+                        />
+
+                        <Input
+                            type="email"
+                            label="Email"
+                            state={email}
+                            setstate={setEmail}
+                            placeholder="DamonSalvatore123@gmail.com"
+                        />
+
+                        <Input
+                            type="password"
+                            label="Password"
+                            state={password}
+                            setstate={setPassword}
+                            placeholder="Example@123"
+                        />
+
+                        <Input
+                            type="password"
+                            label="Confirm Password"
+                            state={confirmPassword}
+                            setstate={setConfirmPassword}
+                            placeholder="Example@123"
+                        />
+
+                        <Button
+                            disabled={loading}
+                            text={loading ? "Loading..." : "Signup Using Email and Password"}
+                            onClick={signupWithEmail}
+                        />
+
+                        <p className='p-login'>or</p>
+
+
+
+                        {/* ✅ AFTER (FIXED) */}
+                        <Button
+                            onClick={googleSignup}
+                            text={loading ? "Loading..." : "Signup Using Google"}
+                            blue={true}
+                        />
+
+                        <p
+                            className='p-login'
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setLoginForm(true)}
+                        >
+                            Already have an account?
+                            <span className='p-login p-blue'> Click here</span>
+                        </p>
+                    </form>
+                </div>
+            )}
         </>
+
     );
 }
 

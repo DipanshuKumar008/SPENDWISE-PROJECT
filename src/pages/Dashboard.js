@@ -10,12 +10,16 @@ import TransactionsTable from '../components/TransationsTable'
 // import moment from "moment";
 import { toast } from "react-toastify";
 
-import { addDoc, collection, getDocs, query } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, deleteDoc } from "firebase/firestore";
+
 import { db, auth } from "../firebase";
 
 import { useAuthState } from "react-firebase-hooks/auth";
 import ChartsComponents from "../components/Charts";
 import NoTransactions from "../components/NoTransactions";
+import { Spin } from "antd";
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -48,7 +52,8 @@ function Dashboard() {
     // ];
     const [transactions, setTransactions] = useState([])
     const [loading, setLoading] = useState(false)
-    const [user] = useAuthState(auth)
+    const [user, authLoading] = useAuthState(auth);
+
     const [isExpenseModalVisible, setIsExpenseModalVisible] = useState(false);
     const [isIncomeModalVisible, setIsIncomeModalVisible] = useState(false);
 
@@ -76,6 +81,17 @@ function Dashboard() {
     };
 
 
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            navigate("/"); 
+        }
+    }, [user, authLoading, navigate]);
+
+
+
+
     const onFinish = (values, type) => {
         const newTransaction = {
             type: type,
@@ -88,89 +104,134 @@ function Dashboard() {
     }
 
 
+    useEffect(() => {
+        let incomeTotal = 0;
+        let expensesTotal = 0;
 
-const calculateBalance = () => {
-    let incomeTotal = 0;
-    let expensesTotal = 0;
+        transactions.forEach((transaction) => {
+            if (transaction.type === "income") {
+                incomeTotal += transaction.amount;
+            }
+            if (transaction.type === "expense") {
+                expensesTotal += transaction.amount;
+            }
+        });
 
-    transactions.forEach((transaction) => {
-        if (transaction.type === "income") {
-            incomeTotal += transaction.amount;
+        setIncome(incomeTotal);
+        setExpenses(expensesTotal);
+        setTotalBalance(incomeTotal - expensesTotal);
+    }, [transactions]);
+
+
+
+
+    async function addTransaction(transaction, many) {
+        if (!user) return;
+
+        try {
+            await addDoc(
+                collection(db, `users/${user.uid}/transactions`),
+                transaction
+            );
+
+            if (!many) toast.success("Transaction Added!");
+            setTransactions((prev) => [...prev, transaction]);
+        } catch (e) {
+            console.error("Error adding document:", e);
+            if (!many) toast.error("Couldn't add transaction");
         }
+    }
 
-        if (transaction.type === "expense") {
-            expensesTotal += transaction.amount;
+
+
+
+    useEffect(() => {
+        if (user) {
+            fetchTransactions();
         }
-    });
-
-    setIncome(incomeTotal);
-    setExpenses(expensesTotal);
-    setTotalBalance(incomeTotal - expensesTotal);
-};
-
-
-
-useEffect(() => calculateBalance(), [transactions]);
-
-
-
-    async function addTransaction(transaction,many) {
-    if (!user) return;
-
-    try {
-        const docRef = await addDoc(
-            collection(db, `users/${user.uid}/transactions`),
-            transaction
-        );
-
-        if (!many)toast.success("Transaction Added!");
-        const newArr = transactions;
-        newArr.push(transaction)
-        setTransactions(newArr);
-        calculateBalance();
-    } catch (e) {
-        console.error("Error adding document:", e);
-        if (!many) toast.error("Couldn't add transaction");
-    }
-}
-
-
-
-useEffect(() => {
-    if (user) {
-        fetchTransactions();
-    }
-}, [user]);
+    }, [user]);
 
 
 
     async function fetchTransactions() {
+        if (!user) return;
+
         setLoading(true);
-        if (user) {
+        try {
             const q = query(collection(db, `users/${user.uid}/transactions`));
             const querySnapshot = await getDocs(q);
-            let transactionsArray = [];
-            querySnapshot.forEach((doc) => {
-                //doc.data() is never undefined for query doc snapshots
-                transactionsArray.push(doc.data());
 
-            });
-            setTransactions(transactionsArray)
-            console.log('TransactionArr', transactionsArray)
-            toast.success("Transactions Fetched!");
+            const transactionsArray = querySnapshot.docs.map((doc) => doc.data());
+            setTransactions(transactionsArray);
+        } catch (e) {
+            toast.error("Failed to fetch transactions");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false)
     }
 
-    let sortedTransactions = transactions.sort((a,b)=>{
-        return new Date (a.date) - new Date(b.date)
-    }) 
+
+
+    const resetBalance = async () => {
+        if (!user) {
+            toast.error("User not logged in");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+
+            const q = query(collection(db, `users/${user.uid}/transactions`));
+            const snapshot = await getDocs(q);
+
+            const deletePromises = snapshot.docs.map((docItem) =>
+                deleteDoc(docItem.ref)
+            );
+
+            await Promise.all(deletePromises);
+
+
+            setTransactions([]);
+            setIncome(0);
+            setExpenses(0);
+            setTotalBalance(0);
+
+            toast.success("Balance reset successfully");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to reset balance");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+
+
+
+
+    const sortedTransactions = [...transactions].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+
+
+
 
     return (
         <div>
             <Header />
             {loading ? (
-                <p>Loading...</p>
+                <div style={{
+                    height: "80vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }}>
+                    <Spin size="large" />
+                </div>
             ) : (
                 <>
                     <DashboardCard
@@ -179,8 +240,15 @@ useEffect(() => {
                         totalBalance={totalBalance}
                         showExpenseModal={showExpenseModal}
                         showIncomeModal={showIncomeModal}
+                        resetBalance={resetBalance}
                     />
-                    {transactions.length!==0? < ChartsComponents sortedTransactions={sortedTransactions} /> :<NoTransactions/>}
+
+                    {transactions.length !== 0 ? (
+                        <ChartsComponents sortedTransactions={sortedTransactions} />
+                    ) : (
+                        <NoTransactions />
+                    )}
+
                     <AddExpenseModal
                         isExpenseModalVisible={isExpenseModalVisible}
                         handleExpenseCancel={handleExpenseCancel}
@@ -192,13 +260,15 @@ useEffect(() => {
                         handleIncomeCancel={handleIncomeCancel}
                         onFinish={onFinish}
                     />
-                    <TransactionsTable 
-                    transactions={transactions} 
-                    addTransaction={addTransaction} 
-                    fetchTransactions={fetchTransactions}
+
+                    <TransactionsTable
+                        transactions={transactions}
+                        addTransaction={addTransaction}
+                        fetchTransactions={fetchTransactions}
                     />
                 </>
             )}
+
         </div>
     );
 }

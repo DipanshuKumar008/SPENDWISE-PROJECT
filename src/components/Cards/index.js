@@ -2,13 +2,13 @@ import './style.css'
 import { Row, Card } from 'antd'
 import Button from '../Button'
 
-function DashboardCard({income,expenses,totalBalance,showExpenseModal,showIncomeModal}) {
+function DashboardCard({income,expenses,totalBalance,showExpenseModal,showIncomeModal ,resetBalance}) {
 
     return (
         <Row className='my-row'>
             <Card className='my-card' title="Current Balance">
                 <p>₹ {totalBalance}</p>
-                <Button text="Reset Balance" blue={true} />
+                <Button text="Reset Balance" blue={true} onClick={resetBalance} />
             </Card >
             <Card className='my-card' title="Total Income">
                 <p>₹ {income}</p>
