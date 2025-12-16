@@ -1,35 +1,13 @@
 .blue-text {
   color: var(--theme);
 }
-.charts-wrapper {
+.wrapper {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-
-  width: 93%;
-  margin: 2rem auto;
-  padding: 2rem;
-
-  border-radius: 0.5rem;
-  box-shadow: var(--shadow);
-  background-color: #fff;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 90vh;
 }
-
-.charts-wrapper > div:first-child {
-  width: 65%;
-}
-
-.charts-wrapper > div:last-child {
-  width: 30%;
-}
-
-.charts-wrapper h2 {
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-
 .signup-signin-container {
   width: 30vw;
   min-width: 400px;
@@ -156,4 +134,34 @@
 
 .dashboard-container {
   padding-bottom: 1rem;
+}
+
+
+
+.charts-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    width: 93%;
+    margin: 2rem auto;
+    padding: 2rem;
+
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    background-color: #fff;
+}
+
+.charts-wrapper>div:first-child {
+    width: 65%;
+}
+
+.charts-wrapper>div:last-child {
+    width: 30%;
+}
+
+.charts-wrapper h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
 }
